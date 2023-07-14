@@ -1,0 +1,14 @@
+Lihat panduan ini sebelum ingin memulai aplikas:
+
+*****untuk memmulai app*****
+-untuk memmulai silahkan ke folder xampp->htdocs->loket-majuhardware(tergantung nama app)lalu buka cmd di dalam folder tersebut dan tulis php artisan serve ketika sudah terbuka servernya langsung ctrl+click di urlnya.
+
+***custom program***
+-untuk ingin mengcostum no antrian silahkan ke folder app lalu resources->views->cetak_no, disana code untuk mengcostum no antrian
+-di folder views adalah semua coding app
+
+***menghapus video***
+untuk menghapus video sudah ada fiturnya tetapi itu hanya menghapus nama video di database untuk bentuk fisiknya ke folder: public->video. disana adalah folder untuk menyimpan video.
+
+
+
