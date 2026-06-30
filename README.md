@@ -15,6 +15,7 @@ Dibangun dengan Laravel 10 + PostgreSQL.
 - [Persyaratan](#persyaratan)
 - [Instalasi](#instalasi)
 - [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Printer Thermal (Cetak Otomatis)](#printer-thermal-cetak-otomatis)
 - [Peta Halaman & Endpoint](#peta-halaman--endpoint)
 - [Sistem Suara Panggilan](#sistem-suara-panggilan)
 - [Kustomisasi](#kustomisasi)
@@ -40,7 +41,7 @@ Dirancang untuk dijalankan pada satu mesin kiosk (mis. XAMPP / PhpWebStudy) deng
 
 ## Fitur Utama
 
-- 🎟️ **Kiosk customer** — ambil & cetak tiket antrian otomatis (auto-print via `window.print()`).
+- 🎟️ **Kiosk customer** — ambil tiket antrian, **cetak otomatis ke printer thermal USB** via ESC/POS dengan fallback ke dialog print browser bila printer tidak tersedia.
 - 📺 **Dashboard antrian (TV umum)** — tampilan 4 kolom real-time, video promosi, running text, jam digital.
 - 🔊 **Pengumuman suara terpusat** — suara panggilan diputar HANYA di dashboard, dengan pengucapan angka Bahasa Indonesia (belas, puluh, ratus) + nama loket. Tellermasih cukup klik "Panggil".
 - 🖥️ **Loket teller** — menampilkan nomor berikutnya, tombol Panggil & Antrian Selanjutnya, panel "No mendatang / No selesai".
@@ -53,6 +54,7 @@ Dirancang untuk dijalankan pada satu mesin kiosk (mis. XAMPP / PhpWebStudy) deng
 - **Database:** PostgreSQL (nama DB default: `antrian_mh`)
 - **Frontend:** Blade, Bootstrap 5, AdminLTE 3, jQuery, DataTables (CDN)
 - **Auth:** laravel/ui (login/register bawaan)
+- **Thermal printing:** mike42/escpos-php (ESC/POS via USB share)
 - **Audio:** file `.ogg` di `public/audio/`
 
 ## Alur Kerja
@@ -108,6 +110,7 @@ Dirancang untuk dijalankan pada satu mesin kiosk (mis. XAMPP / PhpWebStudy) deng
 - **PHP 8.1+** dengan ekstensi: `pdo_pgsql`, `openssl`, `mbstring`, `gd`, `fileinfo`, `zip`, `cURL`.
 - **PostgreSQL** (lokal atau remote).
 - **Composer**.
+- (Opsional) **Printer thermal ESC/POS** (mis. Epson TM-T82, Tiger T60, Goojprt) tersambung USB di mesin kiosk untuk cetak tiket otomatis.
 - (Opsional) Node.js & npm hanya jika ingin membangun ulang aset Vite.
 
 ## Instalasi
@@ -183,6 +186,161 @@ Lalu akses di browser:
 
 > Klik sekali di dashboard antrian untuk mengaktifkan suara (browser memerlukan gestur user sebelum memutar audio).
 
+## Printer Thermal (Cetak Otomatis)
+
+Sistem kiosk dapat mencetak tiket langsung ke printer thermal USB tanpa dialog browser, menggunakan library **`mike42/escpos-php`** yang mengirim perintah ESC/POS langsung. Jika printer tidak tersedia / gagal, sistem otomatis fallback ke dialog print browser (`window.print()`) — customer tetap dapat tiketnya.
+
+### Prasyarat
+
+- Printer thermal yang support **ESC/POS** (mayoritas printer thermal 58mm/80mm di pasaran).
+- Driver printer sudah terinstall di mesin kiosk (Windows).
+- Printer terhubung via **USB** ke mesin yang sama tempat Laravel berjalan.
+
+### 1. Install Library
+
+```bash
+composer require mike42/escpos-php
+```
+
+> Versi yang terinstall otomatis menyesuaikan PHP Anda. PHP tanpa `ext-intl` akan mendapat v2.x (cukup untuk cetak teks), PHP dengan `ext-intl` bisa pakai v4.x (dukungan font lebih kaya).
+
+### 2. Pilih Mode Koneksi
+
+Sistem mendukung **5 mode koneksi** (dipilih via `THERMAL_PRINTER_MODE` di `.env`):
+
+| Mode | Use Case | Cara menemukan nilai `THERMAL_PRINTER_NAME` |
+|------|----------|---------------------------------------------|
+| **`share`** (default) | Windows + butuh akses via SMB | Nama share printer di Control Panel > Sharing |
+| **`usb`** ⭐ | **Windows + USB langsung (tanpa share)** | Control Panel > Printer Properties > tab Ports → port tercentang (`USB001`, `USB002`, ...) |
+| **`com`** | Printer serial / virtual COM port driver | Device Manager > Ports → `COM3`, `COM4`, dst. |
+| **`network`** | Printer Wi-Fi / Ethernet | IP printer + port raw (default `9100`) → format: `192.168.1.50:9100` |
+| **`file`** | Linux/Unix | Path device file, mis. `/dev/usb/lp0` |
+
+#### 2a. Mode `usb` (direct USB, tanpa share) — paling direkomendasikan untuk kiosk
+
+1. Sambungkan printer USB ke mesin kiosk, install driver.
+2. Buka **Control Panel → Devices and Printers**.
+3. Klik kanan printer thermal → **Printer Properties** → buka tab **Ports**.
+4. Lihat port yang **tercentang** (contoh: `USB001`). Catat namanya.
+5. Set di `.env`:
+   ```ini
+   THERMAL_PRINTER_MODE=usb
+   THERMAL_PRINTER_NAME=USB001
+   ```
+
+#### 2b. Mode `share` (alternatif — butuh sharing)
+
+1. Buka **Control Panel → Devices and Printers**.
+2. Klik kanan printer thermal → **Printer properties**.
+3. Buka tab **Sharing** → centang **Share this printer** → isi **Share name** (misal: `TM-T82`).
+4. Set di `.env`:
+   ```ini
+   THERMAL_PRINTER_MODE=share
+   THERMAL_PRINTER_NAME=TM-T82
+   ```
+
+> **Catatan Windows 10/11:** bila koneksi gagal di mode `share`, aktifkan fitur **SMB 1.0/CIFS** (Control Panel → Programs → Turn Windows features on or off → centang `SMB 1.0/CIFS File Sharing Support`).
+
+#### 2c. Mode `network` (printer Wi-Fi/Ethernet)
+
+1. Pastikan printer & mesin kiosk dalam jaringan yang sama.
+2. Cek IP printer (sering via LCD printer atau tools bawaan vendor).
+3. Set di `.env`:
+   ```ini
+   THERMAL_PRINTER_MODE=network
+   THERMAL_PRINTER_NAME=192.168.1.50:9100
+   ```
+
+### 3. Konfigurasi `.env`
+
+```ini
+# Mode koneksi: share / usb / com / network / file
+THERMAL_PRINTER_MODE=usb
+
+# Nilai sesuai mode:
+#   usb     -> USB001 (cek di Printer Properties > Ports)
+#   share   -> nama share printer (mis. TM-T82)
+#   com     -> COM3
+#   network -> 192.168.1.50:9100
+THERMAL_PRINTER_NAME=USB001
+
+# Lebar kertas dalam jumlah karakter:
+#   - 58mm → 32 karakter
+#   - 80mm → 48 karakter
+THERMAL_PRINTER_WIDTH=32
+```
+
+Biarkan `THERMAL_PRINTER_NAME=` kosong bila belum punya printer — sistem akan otomatis pakai fallback browser.
+
+### 4. Konfigurasi Tambahan (opsional)
+
+Isi header/footer tiket & lebar garis pemutus di `config/printing.php`:
+
+```php
+'header' => "MAJU CARE\nSERVICE CENTER\nJL. Pahlawan No. 38-40\nKota Madiun",
+'footer' => "Terima kasih\natas kunjungan anda",
+'width'  => 32,
+```
+
+Setelah mengubah config, jalankan:
+
+```bash
+php artisan config:clear
+```
+
+### 5. Test Cetak
+
+1. Jalankan aplikasi: `php artisan serve`.
+2. Buka kiosk: `http://localhost:8000/uknown_5`.
+3. Klik salah satu layanan (Laptop / Gadget / Komputer / Printer).
+4. Hasil yang diharapkan:
+   - **Printer tersambut:** tiket tercetak otomatis di printer + preview muncul dengan **badge hijau** "Tiket telah dicetak ke printer thermal" → jendela tertutup otomatis 2,5 detik.
+   - **Printer mati / nama salah / tidak dikonfigurasi:** preview muncul dengan **badge kuning** "Printer thermal tidak terdeteksi — cetak manual" → dialog print browser muncul untuk pilih printer.
+
+### Alur Cetak (Auto + Fallback)
+
+```
+Customer klik layanan
+    │
+    ▼
+ClientController::cetakTicket()
+    │
+    │  INSERT tiket ke DB
+    ▼
+ThermalPrinter::printTicket()  ← kirim ESC/POS
+    │  (mode: usb / share / com / network / file)
+    │
+    ┌───────────────┴────────────────┐
+  sukses                          gagal / .env kosong
+    │                                │
+    ▼                                ▼
+view auto_printed=true         view auto_printed=false
++ badge hijau                  + badge kuning
++ auto-close 2.5 detik         + window.print() dialog
+```
+
+### Troubleshooting
+
+| Gejala | Mode | Penyebab umum | Solusi |
+|--------|------|---------------|--------|
+| Selalu fallback ke browser | semua | `THERMAL_PRINTER_NAME` kosong / salah eja | Cek nilai di `.env` |
+| `failed to open stream` | `usb` | Port salah atau dipakai aplikasi lain | Tutup app lain, cek ulang tab Ports. Coba `USB002`, `USB003` |
+| `couldn't print to printer` | `share` | SMB 1.0 belum aktif | Aktifkan via "Turn Windows features on or off" |
+| Connection timeout | `network` | IP salah / firewall blok port 9100 | Ping IP printer, buka port 9100 di firewall |
+| Cetak tapi karakter aneh/kotak | semua | Driver salah / printer bukan ESC/POS | Pakai driver bawaan (Generic / Text Only) |
+| Cetak tapi tidak ter-cut otomatis | semua | Printer tidak support auto-cut command | Tekan cut manual, atau edit `ThermalPrinter::printTicket()` |
+| Karakter ter-putus di ujung | semua | Lebar kertas salah | Set `THERMAL_PRINTER_WIDTH` sesuai (58mm=32, 80mm=48) |
+| `Class 'Mike42\Escpos\Printer' not found` | semua | composer autoload belum refreshed | `composer dump-autoload` |
+
+> **Tip:** Mode `usb` lebih cepat (raw bytes langsung, tanpa lewat spooler) dan tidak butuh SMB/Share — paling cocok untuk kiosk single-machine. Mode `share` berguna kalau printer dipakai bersama dari beberapa mesin.
+
+### File Terkait
+
+- `app/Services/ThermalPrinter.php` — service cetak ESC/POS dengan 5 mode connector + error handling.
+- `app/Http/Controllers/ClientController.php` — controller kiosk yang memanggil service + kirim flag `auto_printed` ke view.
+- `config/printing.php` — konfigurasi mode, nama printer, lebar kertas, header/footer tiket.
+- `resources/views/cetak_no/cetak.blade.php` — view tiket dengan styling 2-mode (preview + auto-printed).
+
 ## Peta Halaman & Endpoint
 
 | Halaman | URL | Controller |
@@ -229,10 +387,10 @@ Suara panggilan **hanya diputar di dashboard antrian** (1 speaker), bukan di tia
 
 ## Catatan Penting
 
-- **Hapus video:** fitur hapus di admin hanya menghapus baris di tabel `video`. File fisik di `public/video/` harus dihapus manual.
+- **Printer thermal:** fitur cetak otomatis butuh printer di-share di Windows dan nama share di-`THERMAL_PRINTER_NAME`. Bila gagal, sistem otomatis fallback ke dialog print browser — customer tetap dapat tiket.
 - **Reset antrian:** menekan tombol Reset akan mengosongkan **seluruh** tabel `table_no_antrian` (truncate). Nomor kembali dari 1.
 - **Browser autoplay:** dashboard butuh 1x klik user untuk mengaktifkan audio (policy browser). Ada banner hint otomatis.
-- **CSRF:** endpoint POST (`/teller/call`, `/antrian/mark-announced/{id}`) dilindungi CSRF; token disisipkan via meta `csrf-token`.
+- **CSRF:** endpoint POST (`/teller/call`, `/antrian/mark-announced/{id}`, `/logout`) dilindungi CSRF; token disisipkan via meta `csrf-token` atau `@csrf` di form.
 
 ## Lisensi
 

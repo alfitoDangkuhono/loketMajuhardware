@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ThermalPrinter;
 use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
@@ -45,8 +46,9 @@ class ClientController extends Controller
     }
 
     /**
-     * Generate & simpan tiket antrian baru, lalu tampilkan view cetak.
-     * Semua akses DB ada di controller (bukan di view).
+     * Generate & simpan tiket antrian baru.
+     * - Coba cetak otomatis ke thermal USB (ESC/POS).
+     * - Jika gagal / tidak dikonfigurasi -> tampilkan preview browser (window.print).
      */
     private function cetakTicket(string $jenis)
     {
@@ -65,11 +67,19 @@ class ClientController extends Controller
             'cntr'       => $nomor,
         ]);
 
-        return view('cetak_no.cetak', [
+        $payload = [
             'huruf' => $huruf,
             'nomor' => $nomor,
             'jenis' => $jenis,
             'tgl'   => $now->toDateTimeString(),
-        ]);
+        ];
+
+        // Coba cetak ke thermal. Jika true -> tidak perlu dialog browser.
+        $printed = ThermalPrinter::printTicket($payload);
+
+        return view('cetak_no.cetak', array_merge($payload, [
+            'auto_printed' => $printed,
+        ]));
     }
 }
+
