@@ -108,13 +108,27 @@
             transform: translateY(-6px);
             box-shadow: 0 18px 44px rgba(0, 0, 0, .45);
         }
-        .loket-card img {
+        .loket-card .img-wrap {
+            flex: 1 1 auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+        .loket-card .img-wrap img {
             width: 62%;
+            max-height: 180px;
             height: auto;
             object-fit: contain;
         }
 
-        .loket-card form { width: 100%; }
+        /* form di-dorong ke bawah kartu supaya tombol sejajar antar kartu
+           meskipun tinggi gambar berbeda. */
+        .loket-card form {
+            width: 100%;
+            margin-top: auto;
+        }
 
         .loket-btn {
             display: block;
@@ -163,28 +177,36 @@
     <main class="kiosk-main">
         <div class="loket-grid">
             <div class="loket-card">
-                <img src="{{ asset('dist/img/LAPTOP.png') }}" alt="Laptop">
+                <div class="img-wrap">
+                    <img src="{{ asset('dist/img/LAPTOP.png') }}" alt="Laptop">
+                </div>
                 <form action="{{ route('cetak_laptop') }}" target="_blank" method="get">
                     <button type="submit" class="loket-btn laptop">Laptop</button>
                 </form>
             </div>
 
             <div class="loket-card">
-                <img src="{{ asset('dist/img/Gadget.png') }}" alt="Gadget">
+                <div class="img-wrap">
+                    <img src="{{ asset('dist/img/Gadget.png') }}" alt="Gadget">
+                </div>
                 <form action="{{ route('cetak_Gadget') }}" target="_blank" method="get">
                     <button type="submit" class="loket-btn gadget">Gadget</button>
                 </form>
             </div>
 
             <div class="loket-card">
-                <img src="{{ asset('dist/img/KOMPUTER.png') }}" alt="Komputer">
+                <div class="img-wrap">
+                    <img src="{{ asset('dist/img/KOMPUTER.png') }}" alt="Komputer">
+                </div>
                 <form action="{{ route('cetak_CPU') }}" target="_blank" method="get">
                     <button type="submit" class="loket-btn cpu">Komputer</button>
                 </form>
             </div>
 
             <div class="loket-card">
-                <img src="{{ asset('dist/img/PRINTER.png') }}" alt="Printer">
+                <div class="img-wrap">
+                    <img src="{{ asset('dist/img/PRINTER.png') }}" alt="Printer">
+                </div>
                 <form action="{{ route('cetak_Printer') }}" target="_blank" method="get">
                     <button type="submit" class="loket-btn printer">Printer</button>
                 </form>
