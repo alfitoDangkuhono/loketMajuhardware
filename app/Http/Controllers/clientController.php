@@ -2,92 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\table_no_antrian;
-use Illuminate\Http\Request;
-use Carbon;
+use Illuminate\Support\Facades\DB;
 
-class clientController extends Controller
+class ClientController extends Controller
 {
-    
     /**
-     * Display a listing of the resource.
+     * Mapping jenis antrian -> kode huruf.
      */
-    public function page_konsumen()
-    {
+    private const KODE = [
+        'Laptop'  => 'L',
+        'Gadget'  => 'G',
+        'CPU'     => 'C',
+        'Printer' => 'P',
+    ];
 
-        return view('client/client');  
-        
+    /**
+     * Halaman kiosk customer (pilihan jenis antrian).
+     */
+    public function index()
+    {
+        return view('client.client');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function cetakLaptop()
     {
-        //
+        return $this->cetakTicket('Laptop');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function cetakGadget()
     {
-       
-        // table_no_antrian::create([
-        //     'no_antrian'=>$request->no_antrian,      //CREATE VALUE DATABASE
-        //     'jenis'=>$request->jenis,
-        //    'status'=>$request->status,
-        //    'time'=>$request->time,
-        //    'counter'=>$request->counter
-        // ]);
-        // return redirect('client/client');
+        return $this->cetakTicket('Gadget');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function cetakCpu()
     {
-        //
+        return $this->cetakTicket('CPU');
+    }
+
+    public function cetakPrinter()
+    {
+        return $this->cetakTicket('Printer');
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Generate & simpan tiket antrian baru, lalu tampilkan view cetak.
+     * Semua akses DB ada di controller (bukan di view).
      */
-    public function edit(string $id)
+    private function cetakTicket(string $jenis)
     {
-        //
-    }
+        $huruf = self::KODE[$jenis];
+        $now   = now();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $nomor = DB::table('table_no_antrian')->where('jenis', $jenis)->count() + 1;
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-    }
+        DB::table('table_no_antrian')->insert([
+            'no_antrian' => $nomor,
+            'huruf'      => $huruf,
+            'jenis'      => $jenis,
+            'st'         => '',
+            'tgl'        => $now->toDateTimeString(),
+            'waktu'      => $now->format('H:i'),
+            'cntr'       => $nomor,
+        ]);
 
-    public function date(){
-       
-    }
-    
-    public function print_Laptop(){
-        return view('/cetak_no/cetak_laptop');
-    }
-    public function print_Gadget(){
-        return view('/cetak_no/cetakGadget');
-    }
-     public function print_CPU(){
-        return view('/cetak_no/cetakCPU');
-    }
-     public function print_Printer(){
-        return view('/cetak_no/cetakPrinter');
+        return view('cetak_no.cetak', [
+            'huruf' => $huruf,
+            'nomor' => $nomor,
+            'jenis' => $jenis,
+            'tgl'   => $now->toDateTimeString(),
+        ]);
     }
 }

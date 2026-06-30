@@ -20,9 +20,11 @@
   <!-- summernote -->
   <link rel="stylesheet" href={{asset("plugins/summernote/summernote-bs4.min.css")}}>
 </head>
+
 <style>
   #jam{
     color: aqua;
+    font-size: 30px;
   }
   #dash{
     background-color: #6f42c1;
@@ -30,7 +32,16 @@
   }
   #name{
     color: cyan;
+    text-transform: uppercase;
   }
+  #regis{
+    background-color: dodgerblue;
+  }
+  #logout{
+    background-color: red;
+    color: white;
+  }
+
 </style>
 
 <?php
@@ -45,7 +56,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
 </head>
   <title>{{Auth::user()->name}}</title>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed" >
 <div class="wrapper">
   <!-- Preloader -->
   <div class="preloader flex-column justify-content-center align-items-center">
@@ -65,11 +76,11 @@
     <ul class="navbar-nav ml-auto">
       <li class="nav-item">
         <a class="nav-item"><li id="jam"><?php echo date('H : I : S')?></li></a>
-        <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+        {{-- <a class="nav-link" data-widget="fullscreen" href="#" role="button">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-angle-expand" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/>
           </svg>
-        </a>
+        </a> --}}
       </li>
     </ul>
   </nav>
@@ -99,13 +110,21 @@
                   <p id="huruf">Dashboard </p>
                 </a>
               </li>
+              {{-- <li class="nav-item">
+                <a href="{{ route('register') }}" id="dash" class="nav-link active">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
+                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"/>
+                  </svg>
+                  <p id="huruf">Regis </p>
+                </a>
+              </li> --}}
               <li class="nav-item">
-                <a href="{{ route('logout') }}" id="dash" class="nav-link active">
+                <a href="{{ route('logout') }}" id="logout" class="nav-link active">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
                     <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
                   </svg>
-                  <p>Log Out </p>
+                  <p id="logout">Log Out </p>
                 </a>
                 {{-- @if (Route::has('password.request'))
                   <a class="btn btn-link" href="{{ route('password.request') }}">

@@ -16,11 +16,16 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        .navbar-brand{
+            color: #f1f1f1;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
         {{-- <img src="{{URL::asset('/icon.png')}}" alt="Avatar" class="avatar"> --}}
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+        <nav class="navbar navbar-expand-md navbar-light bg-dark shadow-sm">
             
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
@@ -42,26 +47,26 @@
                         <!-- Authentication Links -->
                         @guest
                             {{-- <button class="btn btn-primary btn btn-block"> --}}
-                                    @if (Route::has('login'))
+                                    {{-- @if (Route::has('login'))
                                         <strong>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
                                             </li>
                                         </strong>
-                                    @endif
+                                    @endif --}}
                             {{-- </button> --}}
                             {{-- <button class="btn btn-warning btn btn-block"> --}}
-                                @if (Route::has('register'))
+                                {{-- @if (Route::has('register'))
                                     <strong>
                                         <li class="nav-item ">
                                                 <a class="nav-link" href="{{ route('register') }}"> {{ __('Register') }}</a>
                                         </li>
                                     </strong>
-                                 @endif      
+                                 @endif       --}}
                             {{-- </button> --}}
                             @else
                       
-                            <li class="nav-item dropdown">
+                            {{-- <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }}
                                 </a>
@@ -76,7 +81,7 @@
                                         @csrf
                                     </form>
                                 </div>
-                            </li>
+                            </li> --}}
                         @endguest
                     </ul>
                 </div>

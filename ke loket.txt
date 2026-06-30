@@ -1,0 +1,24 @@
+loket=done
+laptop=done
+0=done
+7=done
+8=done
+9=done
+10=done
+11=done
+100=done
+belas=done
+cpu->komputer =done
+gadget=done
+printer=done
+puluh=done
+ratus=done
+
+
++++++++
+
+
+
+
+
+

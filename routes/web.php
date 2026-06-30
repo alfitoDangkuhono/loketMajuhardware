@@ -1,109 +1,82 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
-      //CONNECT DATABASE AND CREATE MODELS
-use App\Models\table_no_antrian;
-
-      //FUNCTION CONTROLLLER
-use App\Http\Controllers\uploadController;
-use App\Http\Controllers\contactController;
-use App\Http\Controllers\homeController;
-use App\Http\Controllers\antrianController;
-use App\Http\Controllers\clientController;
-
-      //TELLER
-use App\Http\Controllers\tellerPageController;
-
-      //TABLE CONTROLLER
-use App\Http\Controllers\table_hpController;
-use App\Http\Controllers\table_laptopController;
-use App\Http\Controllers\table_cpuController;
-use App\Http\Controllers\table_printerController;
-
-
-
+use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TableCpuController;
+use App\Http\Controllers\TableHpController;
+use App\Http\Controllers\TableLaptopController;
+use App\Http\Controllers\TablePrinterController;
+use App\Http\Controllers\TellerPageController;
+use App\Http\Controllers\UploadController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+// LANDING & AUTH
+Route::get('/', [AuthController::class, 'face'])->name('interface');
+Route::get('/login', [HomeController::class, 'index'])->name('login');
+Route::get('/logout', function () {
+    Auth::logout();
+    return redirect('/');
+})->name('logout');
 
-// Route::get('/', function () {
-//    // return view('login/login');
-//    // return view('home/home');
-//    return view('admin/admin');
-// });
-
-
-   
-
-// Route::get('/home/home',[clientController::class,'home_Page']);
-// Route::get('/home', [HomeController::class, 'index'])->name('home');
-
-
-      //LOGOUT PAGE
-Route::get('/',[homeController::class,'index']);
-Route::get('/logout',function(){
-      \Auth::logout();
-      return redirect('/home');
-      });
-
-      //ADMIN PAGE
-//Page Main Href code
-Route::get('/admin/admin',[homeController::class,'index']);
-//Route::get('/login/login',[homeController::class,'login_Page']);
-//Route::get('/logout/logout',[homeController::class,'index']);
-Route::get('/home', [homeController::class, 'index']);
-
-      //TABEL PAGE
-Route::get('uknown_1',[table_hpController::class,'table_page'])->name('table_hp');
-Route::get('uknown_2',[table_laptopController::class,'table_laptop_page'])->name('table_laptop');
-Route::get('uknown_3',[table_cpuController::class,'table_cpu_page'])->name('table_cpu');
-Route::get('uknown_4',[table_printerController::class,'table_printer_page'])->name('table_printer');
 Auth::routes();
 
-      //UPLOAD VIDEO CODE
-Route::get('uplod',[uploadController::class,'upload_Page'])->name('uplod');
-Route::post('plos',[uploadController::class,'video_uplod'])->name('upload');
-Route::Get('reset_video',[uploadController::class,'deletvidio'])->name('deletVideo');
-      
-      //ANTRIAN PAGE
-Route::get('antrian',[antrianController::class,'antrian_no_Page'])->name('antri_1');
-Route::get('load',[antrianController::class,'load'])->name('load');
+// ADMIN DASHBOARD
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('reset', [HomeController::class, 'resetAntrian'])->name('reset_button');
 
-      //PAGE TOMBOL CLIENT
-Route::get('uknown_5',[clientController::class,'page_konsumen'])->name('client');
+// UPLOAD VIDEO & RUNNING TEXT
+Route::get('uplod', [UploadController::class, 'videoPage'])->name('uplod');
+Route::post('plos', [UploadController::class, 'uploadVideo'])->name('upload');
+Route::get('reset_video', [UploadController::class, 'deleteVideo'])->name('deletVideo');
+Route::get('plod', [UploadController::class, 'textPage'])->name('upload_text');
+Route::post('plood', [UploadController::class, 'uploadText'])->name('upload_txt');
+Route::get('deltext', [UploadController::class, 'deleteText'])->name('delettext');
 
+// DASHBOARD ANTRIAN (TV UMUM) - pemutar suara panggilan terpusat
+Route::get('antrian', [AntrianController::class, 'index'])->name('antri_1');
+Route::get('antrian/next-call', [AntrianController::class, 'nextCall'])->name('antrian.next_call');
+Route::post('antrian/mark-announced/{id}', [AntrianController::class, 'markAnnounced'])->name('antrian.mark_announced');
+Route::get('load/{jenis}', [AntrianController::class, 'panelAngka'])->name('load');
 
-      //RESET NO ANTRIAN BUTTON
-Route::Get('reset',[homeController::class,'delete'])->name('reset_Button');
+// KIOS CUSTOMER
+Route::get('uknown_5', [ClientController::class, 'index'])->name('client');
+Route::get('/cetak_no/cetak_laptop', [ClientController::class, 'cetakLaptop'])->name('cetak_laptop');
+Route::get('/cetak_no/cetak_CPU', [ClientController::class, 'cetakCpu'])->name('cetak_CPU');
+Route::get('/cetak_no/cetak_Gadget', [ClientController::class, 'cetakGadget'])->name('cetak_Gadget');
+Route::get('/cetak_no/cetak_Printer', [ClientController::class, 'cetakPrinter'])->name('cetak_Printer');
 
-      //PRINT NO ANTTRIAN 
-Route::get('/cetak_no/cetak_laptop',[clientController::class,'print_Laptop'])->name('cetak_laptop');
-Route::get('/cetak_no/cetak_CPU',[clientController::class,'print_CPU'])->name('cetak_CPU');
-Route::get('/cetak_no/cetak_Gadget',[clientController::class,'print_Gadget'])->name('cetak_Gadget');
-Route::get('/cetak_no/cetak_Printer',[clientController::class,'print_Printer'])->name('cetak_Printer');
+// TELLER (LOKET)
+Route::get('uknown_7', [TellerPageController::class, 'loketLaptop'])->name('teler_laptop');
+Route::get('uknown_8', [TellerPageController::class, 'loketPrinter'])->name('teler_printer');
+Route::get('uknown_9', [TellerPageController::class, 'loketGadget'])->name('teler_gadget');
+Route::get('uknown_10', [TellerPageController::class, 'loketCpu'])->name('teler_cpu');
+Route::post('teller/call', [TellerPageController::class, 'call'])->name('teller.call');
+Route::get('move/{jenis}', [TellerPageController::class, 'refresh'])->name('move');
 
-      //TELLER PAGE
-Route::get('uknown_7',[tellerPageController::class,'teler_Laptop'])->name('teler_laptop');
-Route::get('uknown_8',[tellerPageController::class,'teler_Printer'])->name('teler_printer');
-Route::get('uknown_9',[tellerPageController::class,'teler_Gadget'])->name('teler_gadget');
-Route::get('uknown_10',[tellerPageController::class,'teler_CPU'])->name('teler_cpu');
+// RIWAYAT ANTRIAN PER JENIS
+Route::get('uknown_1', [TableHpController::class, 'index'])->name('table_hp');
+Route::get('uknown_2', [TableLaptopController::class, 'index'])->name('table_laptop');
+Route::get('uknown_3', [TableCpuController::class, 'index'])->name('table_cpu');
+Route::get('uknown_4', [TablePrinterController::class, 'index'])->name('table_printer');
 
-      //CONVERT EXCEL
-Route::get('convert_L',[table_laptopController::class,'export_excel'])->name('convert_L');
-Route::get('convert_G',[table_hpController::class,'export_excel'])->name('convert_G');
-Route::get('convert_C',[table_cpuController::class,'export_excel'])->name('convert_C');
-Route::get('convert_P',[table_printerController::class,'export_excel'])->name('convert_P');
+// EXPORT EXCEL/PDF PER JENIS
+Route::get('convert_L', [TableLaptopController::class, 'export'])->name('convert_L');
+Route::get('convert_G', [TableHpController::class, 'export'])->name('convert_G');
+Route::get('convert_C', [TableCpuController::class, 'export'])->name('convert_C');
+Route::get('convert_P', [TablePrinterController::class, 'export'])->name('convert_P');
+
+// PANEL REFRESH RIWAYAT (jQuery .load)
+Route::get('mango_L', [TableLaptopController::class, 'refresh'])->name('mango_L');
+Route::get('mango_G', [TableHpController::class, 'refresh'])->name('mango_G');
+Route::get('mango_C', [TableCpuController::class, 'refresh'])->name('mango_C');
+Route::get('mango_P', [TablePrinterController::class, 'refresh'])->name('mango_P');

@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use DateTime;
+// use DateTime;
 
 //use\App\Models\table_no_antrian;
 
@@ -16,13 +16,15 @@ return new class extends Migration
     {
         Schema::create('table_no_antrian', function (Blueprint $table) {
             $table->id();
-            $table->int('no_antrian');
-            $table->string('huruf');
-            $table->string('jenis');       
-            $table->date('waktu');
-            $table->date('tgl');
-            $table->string('st');
-            $table->int('cntr');
+            $table->integer('no_antrian');
+            $table->string('huruf')->nullable();
+            $table->string('jenis');
+            $table->dateTime('tgl')->nullable();
+            $table->time('waktu')->nullable();
+            $table->string('st')->default('');
+            $table->integer('cntr')->default(0);
+            $table->boolean('dipanggil')->default(0);
+            $table->timestamp('called_at')->nullable();
             $table->timestamps();
         });
     }
@@ -32,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Schema::dropIfExists('table_no_antrian');
+        Schema::dropIfExists('table_no_antrian');
     }
 };

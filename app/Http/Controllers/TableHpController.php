@@ -2,65 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\table_hp;
-use App\Http\Requests\Storetable_hpRequest;
-use App\Http\Requests\Updatetable_hpRequest;
+use Illuminate\Support\Facades\DB;
 
 class TableHpController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private const JENIS      = 'Gadget';
+    private const MANGO_URL  = 'mango_G';
+    private const EXPORT_URL = 'convert_G';
+    private const TITLE      = 'Gadget';
+
     public function index()
     {
-        //
+        return view('table.table', ['mangoUrl' => self::MANGO_URL, 'title' => self::TITLE]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function refresh()
     {
-        //
+        $rows = DB::table('table_no_antrian')->where('jenis', self::JENIS)->orderBy('id')->get();
+
+        return view('table.tabfresh.tab', [
+            'rows'      => $rows,
+            'exportUrl' => self::EXPORT_URL,
+            'title'     => self::TITLE,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Storetable_hpRequest $request)
+    public function export()
     {
-        //
-    }
+        $rows = DB::table('table_no_antrian')->where('jenis', self::JENIS)->orderBy('id')->get();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(table_hp $table_hp)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(table_hp $table_hp)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Updatetable_hpRequest $request, table_hp $table_hp)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(table_hp $table_hp)
-    {
-        //
+        return view('export.export', ['rows' => $rows, 'title' => self::TITLE]);
     }
 }
