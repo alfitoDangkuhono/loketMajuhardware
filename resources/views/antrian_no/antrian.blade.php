@@ -10,33 +10,112 @@
      <meta name="csrf-token" content="{{ csrf_token() }}">
      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
-     <script type="text/javascript">
-       $(document).ready(function() {
-         setInterval(function() {
-           /*SCRIPT UNTUK MEMBUAT VALUE BERGANTI/REFRESH*/
-           $("#refresh_L").load("load/Laptop");
-         }, 5000);
-       });
+      <script type="text/javascript">
+        // Refresh 4 panel angka via 1 request JSON (sebelumnya 4 request
+        // .load HTML terpisah). setTimeout recursive, skip DOM update kalau
+        // nilai tidak berubah, pause saat tab tidak terlihat.
+        var PANEL_ALL_URL = "<?php echo e(route('antrian.panel_all')); ?>";
+        var PANEL_REFRESH_MS = 10000;
 
-       $(document).ready(function() {
-         setInterval(function() {
-           /*SCRIPT UNTUK MEMBUAT VALUE BERGANTI/REFRESH*/
-           $("#refresh_P").load("load/Printer");
-         }, 5000);
-       });
-       $(document).ready(function() {
-         setInterval(function() {
-           /*SCRIPT UNTUK MEMBUAT VALUE BERGANTI/REFRESH*/
-           $("#refresh_G").load("load/Gadget");
-         }, 5000);
-       });
-       $(document).ready(function() {
-         setInterval(function() {
-           /*SCRIPT UNTUK MEMBUAT VALUE BERGANTI/REFRESH*/
-           $("#refresh_C").load("load/CPU");
-         }, 5000);
-       });
-     </script>
+        // Cache text terakhir per jenis untuk skip update.
+        var panelCache = { Laptop: '', Gadget: '', CPU: '', Printer: '' };
+        var panelTargets = {
+            Laptop: '#refresh_L',
+            Gadget: '#refresh_G',
+            CPU:    '#refresh_C',
+            Printer:'#refresh_P'
+        };
+
+        function refreshPanels() {
+            if (document.hidden) {
+                setTimeout(refreshPanels, PANEL_REFRESH_MS);
+                return;
+            }
+            $.getJSON(PANEL_ALL_URL, function (data) {
+                Object.keys(panelTargets).forEach(function (jenis) {
+                    var info = data[jenis];
+                    if (!info) return;
+                    var txt = info.kode + info.no;
+                    if (txt !== panelCache[jenis]) {
+                        $(panelTargets[jenis]).html('<h1>' + txt + '</h1>');
+                        panelCache[jenis] = txt;
+                    }
+                });
+                setTimeout(refreshPanels, PANEL_REFRESH_MS);
+            }).fail(function () {
+                setTimeout(refreshPanels, PANEL_REFRESH_MS);
+            });
+        }
+        $(document).ready(function() {
+          setTimeout(refreshPanels, PANEL_REFRESH_MS);
+        });
+      </script>
+
+      <script type="text/javascript">
+        // ======= Auto-update video & running text =======
+        // Dipoll tiap 10s. Video/text hanya di-reload kalau isinya benar-benar
+        // berubah (dicek via cache string) supaya marquee tidak restart tanpa
+        // alasan dan video tidak ter-rewind.
+        //
+        // PENTING: cache di-init dari nilai yang sudah dirender server agar
+        // poll pertama TIDAK memicu reload video/text yang sedang aktif
+        // (reload video besar bikin tab berat).
+        var CONTENT_URL     = "<?php echo e(route('antrian.content')); ?>";
+        var CONTENT_POLL_MS = 10000;
+        var INIT_VIDEO = <?php echo json_encode($videos->first()->video ?? null); ?>;
+        var INIT_TEXTS = <?php echo json_encode($texts->pluck('text')->values()->all()); ?>;
+        var lastVideoName   = INIT_VIDEO;
+        var lastTextsKey    = JSON.stringify(INIT_TEXTS);
+
+        // Escape HTML supaya teks dari DB tidak dieksekusi sebagai markup.
+        function escapeHtml(s) {
+          return $('<div>').text(s == null ? '' : s).html();
+        }
+
+        function applyTexts(texts) {
+          var html = (texts || []).map(function (t) {
+            return '<marquee behavior="scroll" scrollamount="6" id="fot">' +
+                     '<h3 id="fontfot">' + escapeHtml(t) + '</h3>' +
+                   '</marquee>';
+          }).join('');
+          $('#texts-container').html(html);
+        }
+
+        function pollContent() {
+          if (document.hidden) {
+            setTimeout(pollContent, CONTENT_POLL_MS);
+            return;
+          }
+          $.getJSON(CONTENT_URL, function (data) {
+            // --- Video ---
+            if (data.video && data.video !== lastVideoName) {
+              var v = document.getElementById('video-el');
+              if (v) {
+                v.src = 'video/' + data.video;
+                v.load();
+                var p = v.play();
+                if (p && p.catch) p.catch(function () {}); // autoplay bisa ditolak
+              }
+              lastVideoName = data.video;
+            }
+
+            // --- Running text ---
+            var key = JSON.stringify(data.texts || []);
+            if (key !== lastTextsKey) {
+              applyTexts(data.texts || []);
+              lastTextsKey = key;
+            }
+
+            setTimeout(pollContent, CONTENT_POLL_MS);
+          }).fail(function () {
+            setTimeout(pollContent, CONTENT_POLL_MS);
+          });
+        }
+
+        $(document).ready(function () {
+          setTimeout(pollContent, CONTENT_POLL_MS);
+        });
+      </script>
 
      <title>Document</title>
      <style>
@@ -202,15 +281,19 @@
          color: white;
        }
 
-       #fot {
+        #fot {
+          background-color: rgb(190, 194, 81);
+          height: 60px;
+          overflow: visible;
+        }
 
-         background-color: rgb(190, 194, 81);
-       }
-
-       #fontfot {
-         /* font-size:40px; */
-         font-family: "Gill Sans Extrabold", sans-serif;
-       }
+        #fontfot {
+          /* font-size:40px; */
+          font-family: "Gill Sans Extrabold", sans-serif;
+          margin: 0;
+          line-height: 60px;
+          font-size: 28px;
+        }
      </style>
      </style>
    </head>
@@ -226,42 +309,44 @@
            <br>
            <p id="jam" class="nav-link" data-widget="fullscreen" href="#" type="hidden" role="button">00 : 00 : 00</p>
          </div>
-          <video class="col-md-8" controls muted autoplay loop>
-            @foreach ($videos as $row)
-              <source src="video/{{ $row->video }}" type="video/mp4">
-            @endforeach
-          </video>
-       </div>
-       <!-- NOTE: -> KODE REFRESH BERADA DI ID HTML CONTOH="refresh_L" ITU ADALAH PARAMETER/DESTINATION REFRESH MODE -->
-
-       <div class="row fixed-bottom" id="mgn">
-         <div class="col-sm">
-           <h2 id="h2_L">LAPTOP</h2>
-           <div id="refresh_L">
-           </div>
-         </div>
-         <div class="col-sm">
-           <h2 id="h2_G">GADGET</h2>
-           <div id="refresh_G">
-           </div>
-         </div>
-         <div class="col-sm">
-           <h2 id="h2_C">KOMPUTER</h2>
-           <div id="refresh_C">
-           </div>
-         </div>
-         <div class="col-sm">
-           <h2 id="h2_P">PRINTER</h2>
-           <div id="refresh_P">
-           </div>
-         </div>
-          @foreach ($texts as $text)
-            <marquee behavior="slide" id="fot" height="10%">
-              <h3 id="fontfot">{{ $text->text }}</h3>
-            </marquee>
-          @endforeach
+           <video id="video-el" class="col-md-8" controls muted autoplay loop>
+             @foreach ($videos as $row)
+               <source src="video/{{ $row->video }}" type="video/mp4">
+             @endforeach
+           </video>
         </div>
-     </div>
+        <!-- NOTE: -> KODE REFRESH BERADA DI ID HTML CONTOH="refresh_L" ITU ADALAH PARAMETER/DESTINATION REFRESH MODE -->
+
+        <div class="row fixed-bottom" id="mgn">
+          <div class="col-sm">
+            <h2 id="h2_L">LAPTOP</h2>
+            <div id="refresh_L">
+            </div>
+          </div>
+          <div class="col-sm">
+            <h2 id="h2_G">GADGET</h2>
+            <div id="refresh_G">
+            </div>
+          </div>
+          <div class="col-sm">
+            <h2 id="h2_C">KOMPUTER</h2>
+            <div id="refresh_C">
+            </div>
+          </div>
+          <div class="col-sm">
+            <h2 id="h2_P">PRINTER</h2>
+            <div id="refresh_P">
+            </div>
+          </div>
+         <div id="texts-container" class="w-100">
+           @foreach ($texts as $text)
+             <marquee behavior="scroll" scrollamount="6" id="fot">
+               <h3 id="fontfot">{{ $text->text }}</h3>
+             </marquee>
+           @endforeach
+         </div>
+         </div>
+      </div>
 
      <!-- ============ SISTEM SUARA PANGGILAN TERPUSAT ============
          Hanya dashboard antrian (TV umum) yang memutar suara.
@@ -345,59 +430,90 @@
            return clips;
          }
 
-         // ======= Putar berurutan =======
-         var isAnnouncing = false;
+          // ======= Putar berurutan =======
+          var isAnnouncing = false;
+          var CLIP_GAP_MS = 0; // jeda antar clip (ms) - 0 = serapat mungkin
 
-         function playSequence(clips, onDone) {
-           var i = 0;
-           var audio = new Audio();
-           audio.onended = function() {
-             i++;
-             if (i < clips.length) playNext();
-             else if (onDone) onDone();
-           };
+          function playSequence(clips, onDone) {
+            // Buat 1 Audio per clip & preload paralel -> saat play() tidak
+            // ada delay network (file kecil .ogg langsung ke-cache browser).
+            var players = clips.map(function(c) {
+              var a = new Audio(AUDIO_DIR + c);
+              a.preload = 'auto';
+              a.load();
+              return a;
+            });
 
-           function playNext() {
-             audio.src = AUDIO_DIR + clips[i];
-             audio.volume = 1;
-             var p = audio.play();
-             if (p && p.catch) {
-               p.catch(function() { // clip gagal -> skip agar tidak macet
-                 i++;
-                 if (i < clips.length) playNext();
-                 else if (onDone) onDone();
-               });
-             }
-           }
-           playNext();
-         }
+            var i = 0;
+            function next() {
+              if (i >= players.length) {
+                if (onDone) onDone();
+                return;
+              }
+              var a = players[i];
+              a.volume = 1;
+              a.onended = function() {
+                i++;
+                if (CLIP_GAP_MS > 0) setTimeout(next, CLIP_GAP_MS);
+                else next();
+              };
+              var p = a.play();
+              if (p && p.catch) {
+                p.catch(function() { i++; next(); }); // clip gagal -> skip
+              }
+            }
+            next();
+          }
 
-         // ======= Poll antrian yang menunggu diumumkan =======
-         function pollNextCall() {
-           if (isAnnouncing || !audioUnlocked) return;
-           $.getJSON(NEXT_CALL_URL, function(res) {
-             if (res.empty) return;
-             isAnnouncing = true;
-             var clips = buildClips(res.no_antrian, res.kode, res.jenis);
-             playSequence(clips, function() {
-               $.post(MARK_BASE + res.id).always(function() {
-                 isAnnouncing = false;
-               });
-             });
-           });
-         }
+          // ======= Poll antrian yang menunggu diumumkan =======
+          // Pakai setTimeout recursive (bukan setInterval) supaya hanya ada
+          // 1 poll in-flight. Saat idle cek tiap 5s, habis announce cek
+          // cepat 500ms (untuk antrian beruntun).
+          var POLL_IDLE_MS = 5000;
+          var POLL_AFTER_ANNOUNCE_MS = 500;
 
-         // Tampilkan hint bila belum unlock dalam 1 detik.
-         setTimeout(function() {
-           if (!audioUnlocked) showHint();
-         }, 1000);
-         document.addEventListener('click', unlockAudio);
-         document.addEventListener('keydown', unlockAudio);
-         document.addEventListener('touchstart', unlockAudio);
+          function schedulePoll(delay) {
+            setTimeout(pollNextCall, delay);
+          }
 
-         setInterval(pollNextCall, 3000); // cek antrian baru tiap 3 detik
-       })();
-     </script>
+          function pollNextCall() {
+            if (!audioUnlocked) {
+              schedulePoll(POLL_IDLE_MS);
+              return;
+            }
+            // Set flag SYNCRONOUS sebelum AJAX mencegah race dobel suara.
+            isAnnouncing = true;
+
+            $.getJSON(NEXT_CALL_URL, function(res) {
+              if (res.empty) {
+                isAnnouncing = false;
+                schedulePoll(POLL_IDLE_MS);
+                return;
+              }
+              var clips = buildClips(res.no_antrian, res.kode, res.jenis);
+              playSequence(clips, function() {
+                $.post(MARK_BASE + res.id).always(function() {
+                  isAnnouncing = false;
+                  schedulePoll(POLL_AFTER_ANNOUNCE_MS);
+                });
+              });
+            }).fail(function() {
+              isAnnouncing = false;
+              schedulePoll(POLL_IDLE_MS);
+            });
+          }
+
+          // Tampilkan hint bila belum unlock dalam 1 detik.
+          setTimeout(function() {
+            if (!audioUnlocked) showHint();
+          }, 1000);
+          document.addEventListener('click', unlockAudio);
+          document.addEventListener('keydown', unlockAudio);
+          document.addEventListener('touchstart', unlockAudio);
+
+          schedulePoll(1500); // mulai polling pertama 1.5s setelah load
+        })();
+      </script>
    </body>
 
    </html>

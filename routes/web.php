@@ -74,7 +74,8 @@ Route::get('uknown_4', [TablePrinterController::class, 'index'])->name('table_pr
 Route::get('antrian', [AntrianController::class, 'index'])->name('antri_1');
 Route::get('antrian/next-call', [AntrianController::class, 'nextCall'])->name('antrian.next_call');
 Route::post('antrian/mark-announced/{id}', [AntrianController::class, 'markAnnounced'])->name('antrian.mark_announced');
-Route::get('load/{jenis}', [AntrianController::class, 'panelAngka'])->name('load');
+Route::get('antrian/panel-all', [AntrianController::class, 'panelAll'])->name('antrian.panel_all');
+Route::get('antrian/content', [AntrianController::class, 'content'])->name('antrian.content');
 
 Route::get('uknown_5', [ClientController::class, 'index'])->name('client');
 Route::get('/cetak_no/cetak_laptop', [ClientController::class, 'cetakLaptop'])->name('cetak_laptop');

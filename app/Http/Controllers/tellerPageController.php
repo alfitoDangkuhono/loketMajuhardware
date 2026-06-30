@@ -55,7 +55,11 @@ class TellerPageController extends Controller
 
         $no = $ticket->no_antrian ?? 0;
 
-        return view('pageteller.teller', compact('jenis', 'kode', 'no'));
+        // Nilai awal panel (No mendatang / No selesai) dirender sekali di
+        // server, selanjutnya diupdate via polling JSON di teller.blade.php.
+        [$noDtBelum, $noDtSudah] = $this->computeRefreshNumbers($jenis);
+
+        return view('pageteller.teller', compact('jenis', 'kode', 'no', 'noDtBelum', 'noDtSudah'));
     }
 
     /**
@@ -99,17 +103,22 @@ class TellerPageController extends Controller
     }
 
     /**
-     * Panel refresh "No mendatang" / "No selesai" di halaman teller.
+     * Hitung nomor "No mendatang" & "No selesai" untuk sebuah jenis.
+     * Dipakai oleh teler() (render awal) & refresh() (polling JSON).
+     *
+     * - No mendatang = tiket menunggu KEDUA yang nyata ada di database
+     *   (yang akan dipanggil setelah nomor sekarang). Jika kurang dari 2
+     *   tiket menunggu -> 0 (tidak ada antrian mendatang yang tersedia).
+     * - No selesai   = tiket terakhir yang dipanggil (sedang/terakhir dilayani).
      */
-    public function refresh(string $jenis)
+    private function computeRefreshNumbers(string $jenis): array
     {
-        $kode = self::LOKET[$jenis]['kode'] ?? '?';
-
-        $belum = DB::table('table_no_antrian')
+        $menunggu = DB::table('table_no_antrian')
             ->where('st', '')
             ->where('jenis', $jenis)
             ->orderBy('no_antrian')
-            ->first();
+            ->take(2)
+            ->get();
 
         $sudah = DB::table('table_no_antrian')
             ->where('st', 'sudah')
@@ -117,9 +126,23 @@ class TellerPageController extends Controller
             ->orderByDesc('no_antrian')
             ->first();
 
-        $noDtBelum = $belum->cntr ?? 0;
-        $noDtSudah = $sudah ? ($sudah->cntr - 1) : 0;
+        $noDtBelum = $menunggu->count() >= 2 ? $menunggu[1]->cntr : 0;
+        $noDtSudah = $sudah->cntr ?? 0;
 
-        return view('pageteller.refreshfunction.refresh', compact('kode', 'noDtBelum', 'noDtSudah'));
+        return [$noDtBelum, $noDtSudah];
+    }
+
+    /**
+     * Panel refresh "No mendatang" / "No selesai" di halaman teller.
+     * Return JSON (bukan HTML) supaya payload kecil & parsing cepat.
+     */
+    public function refresh(string $jenis)
+    {
+        [$noDtBelum, $noDtSudah] = $this->computeRefreshNumbers($jenis);
+
+        return response()->json([
+            'mendatang' => sprintf('%02d', $noDtBelum),
+            'selesai'   => sprintf('%02d', $noDtSudah),
+        ]);
     }
 }

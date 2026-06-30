@@ -19,12 +19,39 @@
     </style>
     <script type="text/javascript">
         $(function () {
-            // Panel "No mendatang" / "No selesai" direfresh tiap detik.
-            setInterval(function () {
-                $("#frsh").load("{{ url('move/'.$jenis) }}");
-            }, 1000);
+            // Panel "No mendatang" / "No selesai" di-refresh via JSON (bukan
+            // .load HTML) supaya payload kecil. Polling pakai setTimeout
+            // recursive 3s, hanya update DOM kalau nilai berubah, dan pause
+            // otomatis saat tab tidak terlihat (hemat CPU/jaringan).
+            var REFRESH_URL = "{{ route('move', $jenis) }}";
+            var REFRESH_MS   = 3000;
+            var KODE         = "{{ $kode }}";
+            var lastMendatang = "{{ $kode }}{{ sprintf('%02d', $noDtBelum) }}";
+            var lastSelesai   = "{{ $kode }}{{ sprintf('%02d', $noDtSudah) }}";
 
-            // CSRF untuk semua AJAX.
+            function pollRefresh() {
+                if (document.hidden) {
+                    setTimeout(pollRefresh, REFRESH_MS);
+                    return;
+                }
+                $.getJSON(REFRESH_URL, function (res) {
+                    var m = KODE + res.mendatang;
+                    var s = KODE + res.selesai;
+                    if (m !== lastMendatang) {
+                        $("#no-mendatang").text(m);
+                        lastMendatang = m;
+                    }
+                    if (s !== lastSelesai) {
+                        $("#no-selesai").text(s);
+                        lastSelesai = s;
+                    }
+                    setTimeout(pollRefresh, REFRESH_MS);
+                }).fail(function () {
+                    setTimeout(pollRefresh, REFRESH_MS);
+                });
+            }
+
+            // CSRF untuk tombol Panggil (POST).
             $.ajaxSetup({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
             });
@@ -43,6 +70,8 @@
                         btn.prop('disabled', false).html('<i class="fas fa-bullhorn"></i> Panggil');
                     });
             });
+
+            setTimeout(pollRefresh, REFRESH_MS);
         });
 
         // Jam digital.
@@ -90,7 +119,32 @@
         </div>
     </center>
     <br><br>
-    <div id="frsh"></div>
+    <div id="frsh">
+        <div class="container-fluid">
+            <div class="grid gap-0 row-gap-3">
+                <div class="row">
+                    <div class="col-sm-3 col-md-6 bg-warning" id="main">
+                        <div id="title_main">
+                            <center><h1 style="color:aliceblue">No mendatang</h1></center>
+                        </div>
+                        <br>
+                        <strong>
+                            <center><h1 class="card-body" id="font"><span id="no-mendatang">{{ $kode }}{{ sprintf('%02d', $noDtBelum) }}</span></h1></center>
+                        </strong>
+                    </div>
+                    <div class="col-sm-9 col-md-6 bg-success" id="main">
+                        <div id="title_main">
+                            <center><h1 style="color:rgb(255, 247, 247)">No selesai</h1></center>
+                        </div>
+                        <br>
+                        <strong>
+                            <center><h1 class="card-body" id="font"><span id="no-selesai">{{ $kode }}{{ sprintf('%02d', $noDtSudah) }}</span></h1></center>
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>

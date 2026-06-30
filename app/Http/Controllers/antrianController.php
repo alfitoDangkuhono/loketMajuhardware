@@ -29,46 +29,75 @@ class AntrianController extends Controller
     }
 
     /**
-     * Panel angka per jenis pada dashboard (dipoll jQuery).
+     * Dipoll dashboard: kembalikan video & teks terbaru dari DB supaya TV
+     * otomatis berganti tanpa perlu refresh halaman saat admin upload baru.
      */
-    public function panelAngka(string $jenis)
+    public function content()
     {
-        $kode = self::KODE[$jenis] ?? '?';
+        return response()->json([
+            'video' => DB::table('video')->value('video'),
+            'texts' => DB::table('text_db')->pluck('text'),
+        ]);
+    }
 
-        $row = DB::table('table_no_antrian')
-            ->where('st', 'sudah')
-            ->where('jenis', $jenis)
-            ->orderByDesc('no_antrian')
-            ->first();
+    /**
+     * Panel angka gabungan untuk semua jenis (dipoll dashboard).
+     * Return JSON { jenis: { kode, no } } — 1 request untuk semua kolom
+     * (sebelumnya 4 request terpisah via .load HTML).
+     */
+    public function panelAll()
+    {
+        $result = [];
+        foreach (self::KODE as $jenis => $kode) {
+            $row = DB::table('table_no_antrian')
+                ->where('st', 'sudah')
+                ->where('jenis', $jenis)
+                ->orderByDesc('no_antrian')
+                ->first();
 
-        $dt = $row->cntr ?? 0;
+            $result[$jenis] = [
+                'kode' => $kode,
+                'no'   => sprintf('%02d', $row->cntr ?? 0),
+            ];
+        }
 
-        return view('antrian_no.freshfuntc.fresh', compact('kode', 'dt'));
+        return response()->json($result);
     }
 
     /**
      * Dipoll dashboard: ambil 1 antrian berstatus "sudah dipanggil" tapi belum
      * diumumkan (dipanggil=0). Return JSON untuk diputar suaranya.
+     *
+     * Baris langsung di-claim (dipanggil=1) secara atomik di dalam transaksi
+     * + lockForUpdate agar poll konkuren (dari dashboard yang sama maupun TV
+     * lain) tidak mengambil baris yang sama -> mencegah suara diputar dobel.
      */
     public function nextCall()
     {
-        $row = DB::table('table_no_antrian')
-            ->where('st', 'sudah')
-            ->where('dipanggil', 0)
-            ->orderBy('called_at')
-            ->orderBy('id')
-            ->first();
+        return DB::transaction(function () {
+            $row = DB::table('table_no_antrian')
+                ->where('st', 'sudah')
+                ->where('dipanggil', 0)
+                ->orderBy('called_at')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->first();
 
-        if (! $row) {
-            return response()->json(['empty' => true]);
-        }
+            if (! $row) {
+                return response()->json(['empty' => true]);
+            }
 
-        return response()->json([
-            'id'         => $row->id,
-            'no_antrian' => (int) $row->no_antrian,
-            'jenis'      => $row->jenis,
-            'kode'       => self::KODE[$row->jenis] ?? '?',
-        ]);
+            DB::table('table_no_antrian')
+                ->where('id', $row->id)
+                ->update(['dipanggil' => 1]);
+
+            return response()->json([
+                'id'         => $row->id,
+                'no_antrian' => (int) $row->no_antrian,
+                'jenis'      => $row->jenis,
+                'kode'       => self::KODE[$row->jenis] ?? '?',
+            ]);
+        });
     }
 
     /**

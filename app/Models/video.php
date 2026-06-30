@@ -10,6 +10,7 @@ class Video extends Model
     use HasFactory;
 
     protected $table ="video";
+    public $timestamps = false;
     protected $fillable = [
         'video'
     ];

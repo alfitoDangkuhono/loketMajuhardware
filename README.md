@@ -359,9 +359,9 @@ view auto_printed=true         view auto_printed=false
 |----------|--------|--------|
 | `/antrian/next-call` | GET | ambil 1 antrian menunggu diumumkan (`dipanggil=0`) |
 | `/antrian/mark-announced/{id}` | POST | tandai sudah diumumkan |
-| `/load/{jenis}` | GET | panel angka dashboard per jenis |
+| `/antrian/panel-all` | GET | panel angka gabungan semua jenis (JSON) |
 | `/teller/call` | POST | tandai antrian sebagai "sudah" (dipanggil teller) |
-| `/move/{jenis}` | GET | panel refresh teller |
+| `/move/{jenis}` | GET | panel refresh teller (JSON) |
 | `/mango_L/G/C/P` | GET | panel riwayat (refresh) |
 
 > URL memakai nama samar (`uknown_*`) secara sengaja untuk kiosk publik.
