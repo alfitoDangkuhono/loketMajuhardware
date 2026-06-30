@@ -178,6 +178,91 @@
                     {{-- blok kartu teller/client/antrian yang tidak dipakai sudah dihapus --}}
 
                 </div>
+
+                {{-- PANEL STATUS KERTAS PRINTER --}}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card card-outline @if($paperIsLow) card-warning @else card-info @endif">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-print"></i>
+                                    &nbsp;Status Kertas Printer Thermal
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                @if (session('paper_reset'))
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <i class="fas fa-check-circle"></i> Counter kertas telah direset.
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                @endif
+
+                                @if (empty(config('printing.name')))
+                                    <div class="alert alert-secondary">
+                                        <i class="fas fa-info-circle"></i>
+                                        Printer thermal belum dikonfigurasi. Set <code>THERMAL_PRINTER_NAME</code> di <code>.env</code>.
+                                    </div>
+                                @endif
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <strong>Sisa kertas estimasi:</strong>
+                                        <span class="badge @if($paperPercent <= 10) badge-danger @elseif($paperPercent <= (int) config('printing.warn_percent', 20)) badge-warning @else badge-success @endif
+                                              p-2" style="font-size: 1rem;">
+                                            {{ $paperPercent }}%
+                                        </span>
+                                    </div>
+                                    <div class="text-muted">
+                                        <small>{{ $paper->tickets_printed }} / {{ config('printing.capacity_tickets') }} tiket tercetak</small>
+                                    </div>
+                                </div>
+
+                                <div class="progress" style="height: 22px;">
+                                    <div class="progress-bar @if($paperPercent <= 10) bg-danger @elseif($paperPercent <= (int) config('printing.warn_percent', 20)) bg-warning @else bg-success @endif"
+                                         role="progressbar"
+                                         style="width: {{ max($paperPercent, 3) }}%;"
+                                         aria-valuenow="{{ $paperPercent }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                        {{ $paperPercent }}%
+                                    </div>
+                                </div>
+
+                                @if($paperIsLow)
+                                    <div class="alert @if($paperPercent <= 10) alert-danger @else alert-warning @endif mt-3 mb-0">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>
+                                            @if($paperPercent <= 10)
+                                                KRITIS! Kertas nyaris habis.
+                                            @else
+                                                Kertas segera habis.
+                                            @endif
+                                        </strong>
+                                        Silakan ganti roll kertas thermal, lalu klik tombol di bawah untuk mereset counter.
+                                    </div>
+                                @endif
+
+                                <p class="text-muted small mt-2 mb-0">
+                                    <i class="far fa-clock"></i>
+                                    Roll terakhir diganti: {{ $paper->last_replaced_at ? \Carbon\Carbon::parse($paper->last_replaced_at)->diffForHumans() : '-' }}
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <form action="{{ route('reset_paper') }}" method="post"
+                                      onsubmit="return confirm('Yakin roll kertas sudah diganti? Counter akan direset ke 0.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-sync-alt"></i> Kertas Sudah Diganti (Reset Counter)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- END PANEL STATUS KERTAS --}}
         </section>
         </section>
         <!-- /.content -->

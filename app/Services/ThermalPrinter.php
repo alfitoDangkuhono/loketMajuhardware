@@ -82,6 +82,9 @@ class ThermalPrinter
             $printer->close();
             $printer = null;
 
+            // Update counter kertas (Approach A: software estimator)
+            \App\Models\PaperStatus::incrementPrinted();
+
             return true;
         } catch (Exception $e) {
             // Pastikan resource tertutup walau gagal

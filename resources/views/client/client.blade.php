@@ -31,6 +31,23 @@
             background-color: #111;
         }
 
+        /* ---------- Paper low alert ---------- */
+        .paper-alert {
+            background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
+            color: #fff;
+            text-align: center;
+            padding: 14px 16px;
+            font-size: clamp(.95rem, 1.6vw, 1.25rem);
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .35);
+            animation: pulse-alert 2s ease-in-out infinite;
+        }
+        .paper-alert i { margin-right: 8px; }
+        @keyframes pulse-alert {
+            0%, 100% { box-shadow: 0 3px 10px rgba(245, 124, 0, .35); }
+            50%      { box-shadow: 0 3px 18px rgba(245, 124, 0, .75); }
+        }
+
         /* ---------- Header ---------- */
         .kiosk-header {
             text-align: center;
@@ -130,6 +147,13 @@
     </style>
 </head>
 <body>
+    @if (!empty($paperCritical) && $paperCritical)
+        <div class="paper-alert" role="alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            Mohon maaf, kertas tiket sedang menipis. Hubungi loket untuk bantuan.
+        </div>
+    @endif
+
     <header class="kiosk-header">
         <img src="{{ asset('dist/img/MAJU CARE.png') }}" alt="Maju Care">
         <h1>MAJU CARE SERVICE CENTER</h1>

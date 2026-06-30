@@ -34,6 +34,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // ADMIN DASHBOARD
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('reset', [HomeController::class, 'resetAntrian'])->name('reset_button');
+    Route::post('reset_paper', [HomeController::class, 'resetPaper'])->name('reset_paper');
 
     // UPLOAD VIDEO & RUNNING TEXT
     Route::get('uplod', [UploadController::class, 'videoPage'])->name('uplod');

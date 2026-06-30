@@ -28,6 +28,21 @@ return [
 
     'width' => (int) env('THERMAL_PRINTER_WIDTH', 32),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Estimasi Kapasitas Roll Kertas
+    |--------------------------------------------------------------------------
+    |
+    | Karena port USB di Windows bersifat unidirectional (tidak bisa baca
+    | status sensor near-end printer), sistem menghitung jumlah tiket yang
+    | tercetak sejak roll diganti untuk mengestimasi sisa kertas.
+    |
+    */
+
+    'capacity_tickets' => (int) env('PAPER_CAPACITY_TICKETS', 1200),
+
+    'warn_percent' => (int) env('PAPER_WARN_PERCENT', 20),
+
     // Header & footer tiket (gunakan \n untuk baris baru)
     'header' => "MAJU CARE\nSERVICE CENTER\nJL. Pahlawan No. 38-40\nKota Madiun",
 

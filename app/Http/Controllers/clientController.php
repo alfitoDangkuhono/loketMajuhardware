@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaperStatus;
 use App\Services\ThermalPrinter;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,10 @@ class ClientController extends Controller
      */
     public function index()
     {
-        return view('client.client');
+        $paperCritical = PaperStatus::isCritical();
+        $paperPercent  = PaperStatus::remainingPercent();
+
+        return view('client.client', compact('paperCritical', 'paperPercent'));
     }
 
     public function cetakLaptop()
