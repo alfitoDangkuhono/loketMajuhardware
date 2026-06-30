@@ -27,7 +27,7 @@
             /* Background + overlay gelap supaya kartu & teks terbaca (tidak bentrok) */
             background:
                 linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-                url('{{ asset('dist/img/bg.jpg') }}') center/cover no-repeat fixed;
+                center/cover no-repeat fixed;
             background-color: #111;
         }
 
