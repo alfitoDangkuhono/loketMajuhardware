@@ -41,6 +41,100 @@
     background-color: red;
     color: white;
   }
+  .main-sidebar .sidebar{
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+  }
+  .sidebar-action{
+    padding: 12px;
+    flex-shrink: 0;
+  }
+  .sidebar-action--top{
+    margin-top: 4px;
+  }
+  .sidebar-action--bottom{
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    margin-top: auto;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+  }
+  .sidebar-action--bottom form{
+    margin: 0;
+    width: 100%;
+  }
+  .btn-action{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 8px;
+    color: #fff !important;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-action svg{
+    flex-shrink: 0;
+  }
+  .btn-action:hover{
+    color: #fff !important;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.35);
+  }
+  .btn-action:active{
+    transform: translateY(0);
+  }
+  .btn-action--blue{
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    box-shadow: 0 3px 8px rgba(78, 115, 223, 0.35);
+  }
+  .btn-action--blue:hover{
+    background: linear-gradient(135deg, #3a5fcf 0%, #1a3a9e 100%);
+    box-shadow: 0 5px 12px rgba(78, 115, 223, 0.5);
+  }
+  .btn-action--red{
+    background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+    box-shadow: 0 3px 8px rgba(231, 74, 59, 0.35);
+  }
+  .btn-action--red:hover{
+    background: linear-gradient(135deg, #d62c1f 0%, #a93226 100%);
+    box-shadow: 0 5px 12px rgba(231, 74, 59, 0.5);
+  }
+  body.sidebar-collapse .sidebar-action{
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+  }
+  body.sidebar-collapse .btn-action{
+    width: 38px;
+    height: 38px;
+    margin: 0 auto;
+    padding: 0;
+    border-radius: 50%;
+    gap: 0;
+  }
+  body.sidebar-collapse .btn-action span{
+    display: none;
+  }
+  body.sidebar-collapse .btn-action svg{
+    width: 16px;
+    height: 16px;
+  }
 
 </style>
 
@@ -98,43 +192,25 @@
           <a href="{{url('/home')}}" id="name" class="d-block">{{Auth::user()->name}}</a>
         </div>
       </div>
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <li class="nav-item menu-open">  
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{url('/home')}}" id="dash" class="nav-link active">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
-                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"/>
-                  </svg>
-                  <p id="huruf">Dashboard </p>
-                </a>
-              </li>
-              {{-- <li class="nav-item">
-                <a href="{{ route('register') }}" id="dash" class="nav-link active">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
-                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"/>
-                  </svg>
-                  <p id="huruf">Regis </p>
-                </a>
-              </li> --}}
-              <li class="nav-item">
-                <a href="{{ route('logout') }}" id="logout" class="nav-link active">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                    <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
-                  </svg>
-                  <p id="logout">Log Out </p>
-                </a>
-                {{-- @if (Route::has('password.request'))
-                  <a class="btn btn-link" href="{{ route('password.request') }}">
-                     {{ __('Forgot Your Password?') }}
-                  </a>
-                 @endif --}}
-              </li>
-            </ul>
-          </li>     
-        </ul>
+      <nav class="sidebar-action sidebar-action--top">
+        <a href="{{url('/home')}}" class="btn-action btn-action--blue">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
+            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+      </nav>
+      <nav class="sidebar-action sidebar-action--bottom">
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button type="submit" class="btn-action btn-action--red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+              <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+            </svg>
+            <span>Log Out</span>
+          </button>
+        </form>
       </nav>
     </div>
   </aside>

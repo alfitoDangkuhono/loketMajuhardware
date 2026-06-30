@@ -5,64 +5,150 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1,   shrink-to-fit=no">
-    <title>Video upload</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Upload Video</title>
     <style>
-        #plod {
-            background-color: aqua;
+        .video-card {
+            max-width: 720px;
+            margin: 40px auto;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
         }
 
-        #head {
-            background-color: grey;
+        .video-card .card-header {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: #fff;
+            padding: 18px 20px;
+            border-bottom: none;
         }
 
-        #font-head {
-            color: rgb(139, 196, 82);
+        .video-card .card-header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
         }
 
-        #note {
-            color: crimson;
+        .video-card .card-body {
+            padding: 28px;
+            background-color: #ffffff;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: block;
+        }
+
+        .form-control-file {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d2d6dc;
+            border-radius: 8px;
+            background-color: #f8f9fc;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control-file:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            outline: none;
+        }
+
+        .btn-action {
+            min-width: 140px;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+
+        .video-card .card-footer {
+            background-color: #f8f9fc;
+            border-top: 1px solid #e3e6f0;
+            padding: 18px 28px;
+        }
+
+        .note-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background-color: #fff8f0;
+            border: 1px solid #ffd9a8;
+            border-left: 4px solid #f6c23e;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-top: 14px;
+            color: #8a6100;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0;
+        }
+
+        .note-box strong {
+            color: #6b4e00;
+        }
+
+        .error-text {
+            color: #e74a3b;
+            font-size: 0.85rem;
+            margin-top: 6px;
+            margin-bottom: 0;
         }
     </style>
 </head>
 
 <body>
     <div class="content-wrapper">
-        <div class="card text-center">
-            <div class="card-header" id="head">
-                <h1 id="font-head">Upload Video</h1>
+        <div class="card video-card">
+            <div class="card-header text-center">
+                <h1><i class="fas fa-video mr-2"></i> Upload Video</h1>
             </div>
             <div class="card-body">
-                <form action="{{ Route('upload') }}" method="post" enctype="multipart/form-data">
+                <form action="{{ route('upload') }}" method="post" enctype="multipart/form-data">
                     {{ csrf_field() }}
-                    <div>
-                        <label>Choose Video</label>
-                        <input type="file" name="video" />
-                    </div>
-                    <p>
+                    <div class="form-group text-left">
+                        <label for="video">Choose Video</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="video" name="video"
+                                class="form-control-file @if ($errors->has('video')) is-invalid @endif" />
+                        </div>
+
                         @if ($errors->has('video'))
-                            {{ $errors->first('video') }}
+                            <p class="error-text">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ $errors->first('video') }}
+                            </p>
                         @endif
-                    </p>
-                    <button class="btn btn-primary" type="submit" name="click">Upload</button>
+                    </div>
+
+                    <div class="text-right">
+                        <button class="btn btn-primary btn-action" type="submit" name="click">
+                            <i class="fas fa-upload mr-1"></i> Upload
+                        </button>
+                    </div>
                 </form>
             </div>
-            <div class="card-footer text-muted">
-                <form action="{{ Route('deletVideo') }}" method="GET" type="hidden">
-                    <button class="btn btn-danger">
-                        Hapus Video
+            <div class="card-footer">
+                <form action="{{ route('deletVideo') }}" method="GET" class="text-right mb-0">
+                    <button class="btn btn-danger btn-action" type="submit">
+                        <i class="fas fa-trash mr-1"></i> Hapus Video
                     </button>
                 </form>
-                <h4 id="note">
-                    Note: jika ingin mengganti video klik hapus video dulu agar tidak error
-                </h4>
+                <p class="note-box">
+                    <i class="fas fa-info-circle mt-1"></i>
+                    <span><strong>Info:</strong> mengunggah video baru akan otomatis mengganti video lama. Gunakan
+                        tombol Hapus Video untuk mengosongkan tampilan.</span>
+                </p>
             </div>
         </div>
-
     </div>
-
-
-
 </body>
 
 </html>
