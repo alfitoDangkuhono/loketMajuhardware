@@ -1,0 +1,56 @@
+# File/direktori yang TIDAK perlu di-copy ke dalam Docker image.
+# Membuat image lebih kecil dan build lebih cepat.
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+
+# Dependency yang sudah di-install (akan diinstall ulang di dalam image)
+node_modules/
+vendor/
+
+# Environment lokal (jangan masukkan ke image; di-handle via compose / entrypoint)
+.env
+.env.*
+!.env.example
+
+# Build artifact lokal (akan di-build ulang di dalam image)
+public/build/
+public/hot
+dist/
+build/
+
+# Data & log lokal (di-handle via volume)
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/*
+
+# Schema database TIDAK dari dump lagi — dibuat lewat `php artisan migrate`
+# (finaldb.sql adalah dump MySQL, tidak kompatibel PostgreSQL). File ini tetap
+# dimasukkan ke image hanya sebagai arsip referensi (tidak dieksekusi).
+
+# File sementara / OS
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log
+yarn-error.log
+
+# File teks panduan (tidak perlu di image) - spesifik agar robots.txt tetap masuk
+READ MEE BEFORE RUNNING APP.txt
+ke loket.txt
+*.md
+
+# Docker itu sendiri (tidak perlu di dalam image)
+Dockerfile
+.dockerignore
+docker-compose.yaml
+docker-compose.*.yaml

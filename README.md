@@ -173,9 +173,78 @@ php artisan tinker
 
 ## Menjalankan Aplikasi
 
+### Opsi A — dengan Docker (paling mudah, tanpa install PHP/Composer/Node)
+
+Cukup butuh **Docker / Docker Desktop**. Semua dependency (PHP, Apache, PostgreSQL, Composer, Node) sudah ada di dalam image.
+
+```bash
+# 1. Clone repo ini
+git clone <url-repo-ini> loket-majuhardware
+cd loket-majuhardware
+
+# 2. Jalankan (image di-pull otomatis dari Docker Hub)
+docker compose up -d
+```
+
+Buka **http://localhost:8080**.
+
+- **Menu utama:** http://localhost:8080/
+- **Kiosk customer:** http://localhost:8080/uknown_5
+- **Dashboard antrian (TV):** http://localhost:8080/antrian
+- **Admin dashboard:** http://localhost:8080/home (wajib login)
+
+Pada first run, container otomatis:
+1. menunggu PostgreSQL siap,
+2. `php artisan key:generate`,
+3. `php artisan migrate` (membuat schema tabel di PostgreSQL),
+4. menjalankan seeder (sekali).
+
+> **Catatan:** file `finaldb.sql` adalah dump MySQL/MariaDB lama (struktur saja, tidak kompatibel PostgreSQL) sehingga **tidak dipakai**. Schema database dibuat via migration Laravel yang portable.
+
+#### Membuat akun admin pertama (via container)
+
+```bash
+docker compose exec app php artisan tinker
+>>> \App\Models\User::create([
+...     'name' => 'Admin',
+...     'email' => 'admin@majucare.test',
+...     'password' => bcrypt('rahasia'),
+... ]);
+>>> exit
+```
+
+#### Mengubah konfigurasi (port, password DB, dll.)
+
+Edit nilai di bagian `environment:` pada `docker-compose.yaml`, atau buat file `.env` di root project untuk override variabel compose:
+
+```env
+IMAGE=majuhardware/loket-majuhardware:latest
+DB_DATABASE=antrian_mh
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+```
+
+Lalu `docker compose up -d`.
+
+#### Perintah Docker lainnya
+
+```bash
+docker compose logs -f app     # lihat log aplikasi
+docker compose exec app bash   # masuk shell container
+docker compose down            # hentikan (data volume tetap)
+docker compose down -v         # hentikan + HAPUS data DB & storage
+```
+
+> **Printer thermal:** fitur cetak otomatis (ESC/POS) dirancang untuk Windows & butuh akses USB langsung — di dalam container tidak bisa mengakses printer fisik. Untuk kiosk yang butuh cetak otomatis, jalankan aplikasi langsung di Windows (Opsi B). Container ini cocok untuk **dashboard TV** & **teller**.
+
+---
+
+### Opsi B — tanpa Docker (XAMPP / PhpWebStudy)
+
 ```bash
 php artisan serve
 ```
+
 
 Lalu akses di browser:
 - **Menu utama:** `http://localhost:8000/`
