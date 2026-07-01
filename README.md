@@ -255,6 +255,89 @@ Lalu akses di browser:
 
 > Klik sekali di dashboard antrian untuk mengaktifkan suara (browser memerlukan gestur user sebelum memutar audio).
 
+## Deploy ke Server Linux (produksi)
+
+> 📖 **Versi lengkap & step-by-step:** lihat [`DEPLOY-LINUX.md`](./DEPLOY-LINUX.md) (Native & Docker, troubleshooting, Nginx, auto-start, dll).
+
+Ada dua cara — pilih salah satu:
+
+| | **Opsi 1 — Native (tanpa Docker)** | **Opsi 2 — Docker** |
+|---|---|---|
+| File | `setup.sh` + `serve.sh` + `loket-majuhardware-app.service` | `deploy.sh` + `loket-majuhardware.service` + `docker-compose.yaml` |
+| Install | PHP, Composer, PostgreSQL, Node dipasang di server | Semua di dalam container Docker |
+| Cocok untuk | Server yang ingin jalankan Laravel langsung | Deploy cepat & terisolasi |
+
+---
+
+### Opsi 1 — Native (jalankan Laravel langsung, TANPA Docker)
+
+```bash
+# 1. Unggah project ke server
+git clone <url-repo-ini> /opt/loket-majuhardware
+cd /opt/loket-majuhardware
+chmod +x setup.sh serve.sh
+
+# 2. Setup sekali jalan (install PHP/Composer/Postgres/Node + config + migrate)
+./setup.sh
+#    override konfigurasi (opsional):  DB_PASS=rahasia APP_PORT=8000 ./setup.sh
+
+# 3a. Jalankan langsung (foreground, Ctrl+C stop)
+./serve.sh serve
+
+# 3b. ATAU pasang sebagai service (auto-start saat boot)
+./serve.sh install
+./serve.sh start
+./serve.sh status
+./serve.sh logs
+```
+
+Akses: `http://<IP-SERVER>:8000`
+
+Perintah `serve.sh`:
+| Perintah | Fungsi |
+|----------|--------|
+| `./serve.sh serve` | jalan langsung (foreground) |
+| `./serve.sh install` | pasang & enable service systemd |
+| `./serve.sh start` / `stop` / `restart` | kontrol service |
+| `./serve.sh status` / `logs` | status & log (journalctl) |
+| `./serve.sh migrate` / `tinker` | utilitas artisan |
+
+> Catatan: `php artisan serve` adalah single-process. Cukup untuk kiosk/dashboard internal. Untuk beban tinggi gunakan PHP-FPM + Nginx.
+> Bila DB sudah ada & hanya ingin setup aplikasi: `SKIP_DB=1 ./setup.sh`.
+
+---
+
+### Opsi 2 — Docker
+
+```bash
+# di server, mis. di /opt/loket-majuhardware
+git clone <url-repo-ini> /opt/loket-majuhardware
+cd /opt/loket-majuhardware
+chmod +x deploy.sh
+./deploy.sh            # auto-install Docker bila belum ada, lalu start
+./deploy.sh status     # lihat status + URL akses
+```
+
+Akses: `http://<IP-SERVER>:8080`
+
+Auto-start on boot (opsional):
+```bash
+sudo cp loket-majuhardware.service /etc/systemd/system/
+# sesuaikan WorkingDirectory bila lokasi project berbeda dari /opt/loket-majuhardware
+sudo systemctl daemon-reload
+sudo systemctl enable --now loket-majuhardware
+```
+
+Perintah `deploy.sh`:
+| Perintah | Fungsi |
+|----------|--------|
+| `./deploy.sh` / `up` | pull image Docker Hub + start |
+| `./deploy.sh --build` | build image dari source + start |
+| `./deploy.sh update` | pull image terbaru + restart |
+| `./deploy.sh restart` / `down` / `logs` / `status` | utilitas manajemen |
+| `./deploy.sh shell` | masuk shell container app |
+
+
 ## Printer Thermal (Cetak Otomatis)
 
 Sistem kiosk dapat mencetak tiket langsung ke printer thermal USB tanpa dialog browser, menggunakan library **`mike42/escpos-php`** yang mengirim perintah ESC/POS langsung. Jika printer tidak tersedia / gagal, sistem otomatis fallback ke dialog print browser (`window.print()`) — customer tetap dapat tiketnya.

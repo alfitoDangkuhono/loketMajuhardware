@@ -1,0 +1,52 @@
+# =============================================================================
+# loket-majuhardware.service - systemd unit agar stack Docker auto-start on boot
+#
+# CARA PASANG (jalankan sebagai root / sudo):
+#   1. Salin file ini ke /etc/systemd/system/:
+#        sudo cp loket-majuhardware.service /etc/systemd/system/
+#
+#   2. Edit path WorkingDirectory di bawah sesuai lokasi project di server:
+#        sudo nano /etc/systemd/system/loket-majuhardware.service
+#      (default: /opt/loket-majuhardware)
+#
+#   3. Reload systemd & aktifkan:
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable loket-majuhardware
+#        sudo systemctl start loket-majuhardware
+#
+#   4. Cek status:
+#        sudo systemctl status loket-majuhardware
+#        sudo journalctl -u loket-majuhardware -f
+#
+# Setelah ini, stack akan otomatis jalan tiap server boot / restart.
+# Untuk stop permanen:  sudo systemctl disable --now loket-majuhardware
+# =============================================================================
+
+[Unit]
+Description=Loket Maju Hardware (Laravel + PostgreSQL via docker compose)
+Documentation=https://docs.docker.com/compose/
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# === GANTI path ini sesuai lokasi project di server Anda ===
+WorkingDirectory=/opt/loket-majuhardware
+
+# Path docker compose (gunakan v2 plugin). Sesuaikan bila berbeda.
+ExecStart=/usr/bin/docker compose -f docker-compose.yaml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yaml down
+
+# Tidak ada timeout (pull/build bisa lama di first run)
+TimeoutStartSec=0
+TimeoutStopSec=120
+
+# Auto-restart bila gagal start
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

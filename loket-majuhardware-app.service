@@ -1,0 +1,46 @@
+# =============================================================================
+# loket-majuhardware-app.service
+# Template unit systemd untuk menjalankan aplikasi via `php artisan serve`.
+#
+# File ini mengandung placeholder (__WORKDIR__, __USER__, __PHP__, __HOST__,
+# __PORT__) yang otomatis diisi oleh:  ./serve.sh install
+# Tidak perlu (dan TIDAK disarankan) diedit manual.
+#
+# Setelah 'install', kontrol via:
+#   sudo systemctl start | stop | restart | status loket-majuhardware-app
+#   sudo journalctl -u loket-majuhardware-app -f      # lihat log
+# =============================================================================
+
+[Unit]
+Description=Loket Maju Hardware (Laravel via php artisan serve)
+Documentation=file://README.md
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=__USER__
+Group=__USER__
+WorkingDirectory=__WORKDIR__
+
+ExecStart=__PHP__ artisan serve --host=__HOST__ --port=__PORT__
+
+# Restart otomatis bila proses berhenti/crash
+Restart=always
+RestartSec=5
+
+# Pastikan environment konsisten
+Environment=APP_ENV=production
+Environment=APP_DEBUG=false
+
+# Log ke jurnal systemd (lihat: journalctl -u loket-majuhardware-app)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=loket-majuhardware
+
+# Keamanan dasar
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
