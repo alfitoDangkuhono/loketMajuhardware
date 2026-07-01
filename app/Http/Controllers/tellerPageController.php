@@ -46,10 +46,10 @@ class TellerPageController extends Controller
     {
         $kode = self::LOKET[$jenis]['kode'];
 
-        // Ambil antrian yang belum dipanggil (st='') urut paling awal.
         $ticket = DB::table('table_no_antrian')
             ->where('st', '')
             ->where('jenis', $jenis)
+            ->whereDate('tgl', now()->toDateString())
             ->orderBy('id')
             ->first();
 
@@ -78,6 +78,7 @@ class TellerPageController extends Controller
         $ticket = DB::table('table_no_antrian')
             ->where('st', '')
             ->where('jenis', $data['jenis'])
+            ->whereDate('tgl', now()->toDateString())
             ->orderBy('id')
             ->first();
 
@@ -116,6 +117,7 @@ class TellerPageController extends Controller
         $menunggu = DB::table('table_no_antrian')
             ->where('st', '')
             ->where('jenis', $jenis)
+            ->whereDate('tgl', now()->toDateString())
             ->orderBy('no_antrian')
             ->take(2)
             ->get();
@@ -123,6 +125,7 @@ class TellerPageController extends Controller
         $sudah = DB::table('table_no_antrian')
             ->where('st', 'sudah')
             ->where('jenis', $jenis)
+            ->whereDate('tgl', now()->toDateString())
             ->orderByDesc('no_antrian')
             ->first();
 

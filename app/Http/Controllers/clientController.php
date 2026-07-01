@@ -59,7 +59,10 @@ class ClientController extends Controller
         $huruf = self::KODE[$jenis];
         $now   = now();
 
-        $nomor = DB::table('table_no_antrian')->where('jenis', $jenis)->count() + 1;
+        $nomor = DB::table('table_no_antrian')
+            ->where('jenis', $jenis)
+            ->whereDate('tgl', $now->toDateString())
+            ->count() + 1;
 
         DB::table('table_no_antrian')->insert([
             'no_antrian' => $nomor,

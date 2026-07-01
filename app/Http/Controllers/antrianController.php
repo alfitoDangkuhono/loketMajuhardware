@@ -52,6 +52,7 @@ class AntrianController extends Controller
             $row = DB::table('table_no_antrian')
                 ->where('st', 'sudah')
                 ->where('jenis', $jenis)
+                ->whereDate('tgl', now()->toDateString())
                 ->orderByDesc('no_antrian')
                 ->first();
 
@@ -78,6 +79,7 @@ class AntrianController extends Controller
             $row = DB::table('table_no_antrian')
                 ->where('st', 'sudah')
                 ->where('dipanggil', 0)
+                ->whereDate('tgl', now()->toDateString())
                 ->orderBy('called_at')
                 ->orderBy('id')
                 ->lockForUpdate()
